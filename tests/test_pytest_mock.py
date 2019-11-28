@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 import platform
 import sys
@@ -746,6 +748,61 @@ def test_abort_patch_context_manager(mocker):
     with pytest.raises(ValueError) as excinfo:
         with mocker.patch("some_package"):
             pass
+
+    expected_error_msg = (
+        "Using mocker in a with context is not supported. "
+        "https://github.com/pytest-dev/pytest-mock#note-about-usage-as-context-manager"
+    )
+
+    assert str(excinfo.value) == expected_error_msg
+
+
+def test_abort_context_manager_with_unicode(mocker):
+    class A(object):
+        def doIt(self):
+            return False
+
+    a = A()
+
+    with pytest.raises(ValueError) as excinfo:
+        with mocker.patch.object(a, "doIt", return_value=u"quero café!"):
+            assert a.doIt() == u"quero café!"
+
+    expected_error_msg = (
+        "Using mocker in a with context is not supported. "
+        "https://github.com/pytest-dev/pytest-mock#note-about-usage-as-context-manager"
+    )
+
+    assert str(excinfo.value) == expected_error_msg
+
+
+def test_abort_context_manager_with_unicode_and_new_line(mocker):
+    class A(object):
+        def doIt(self):
+            return False
+
+    a = A()
+
+    with mocker.patch.object(a, "doIt", return_value=u"""
+quero café!"""):
+        assert a.doIt() == u"""
+quero café!"""
+
+    a.doIt.assert_called_once()
+
+
+def test_abort_context_manager_with_no_context_and_some_new_lines(mocker):
+    class A(object):
+        def doIt(self):
+            return False
+
+    a = A()
+
+    with pytest.raises(ValueError) as excinfo:
+        mocker.patch.object(a, "doIt", return_value="""
+with mocker. BOOOOM!!!""")
+
+    assert a.doIt() is False
 
     expected_error_msg = (
         "Using mocker in a with context is not supported. "

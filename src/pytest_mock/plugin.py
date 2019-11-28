@@ -163,9 +163,8 @@ class MockFixture(object):
             if info.code_context is None:
                 # no source code available (#169)
                 return
-            code_context = " ".join(info.code_context).strip()
 
-            if code_context.startswith("with mocker."):
+            if any(ctx.lstrip()[:12] == "with mocker." for ctx in info.code_context):
                 raise ValueError(
                     "Using mocker in a with context is not supported. "
                     "https://github.com/pytest-dev/pytest-mock#note-about-usage-as-context-manager"
